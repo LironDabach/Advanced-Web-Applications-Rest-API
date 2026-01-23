@@ -1,5 +1,6 @@
 import express, { Express } from "express";
 import mongoose from "mongoose";
+import postsRoute from "./src/routes/postsRoute";
 import dotenv from "dotenv";
 
 dotenv.config({ path: ".env.dev" });
@@ -8,7 +9,7 @@ const app = express();
 app.use(express.json());
 
 // // API routes
-// app.use("/post", postsRoute);
+app.use("/post", postsRoute);
 // app.use("/comment", commentsRoute);
 // app.use("/auth", authRoute);
 
@@ -16,14 +17,12 @@ const initApp = () => {
   const pr = new Promise<Express>((resolve, reject) => {
     const dbUrl = process.env.DATABASE_URL;
     if (!dbUrl) {
-      reject("DATABASE_URL is not defined");
+      reject("DATABASE_URL is undefined");
       return;
     }
-    mongoose
-      .connect(dbUrl, {})
-      .then(() => {
-        resolve(app);
-      });
+    mongoose.connect(dbUrl, {}).then(() => {
+      resolve(app);
+    });
     const db = mongoose.connection;
     db.on("error", (error) => console.error(error));
     db.once("open", () => console.log("Connected to Database"));

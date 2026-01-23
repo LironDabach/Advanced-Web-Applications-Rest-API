@@ -1,0 +1,35 @@
+############################
+########## <Post> ##########
+############################
+
+### Create Post
+POST http://localhost:3000/post
+Content-Type: application/json
+
+{
+  "title": "First Post",
+  "content": "This is my first post",
+  "sender": "liron_dabach"
+}
+
+### Get All Posts
+GET http://localhost:3000/post
+
+### Get Post By ID
+GET http://localhost:3000/post/64bfa12c9e1a4a00123abcd1
+
+### Get Posts By Sender
+GET http://localhost:3000/post?sender=user123
+
+### Update Post
+PUT http://localhost:3000/post/64bfa12c9e1a4a00123abcd1
+Content-Type: application/json
+
+{
+  "title": "Updated Post Title",
+  "content": "Updated content",
+  "sender": "liron_dabach"
+}
+
+### Delete Post
+DELETE http://localhost:3000/post/64bfa12c9e1a4a00123abcd1

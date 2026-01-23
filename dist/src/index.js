@@ -1,0 +1,31 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const mongoose_1 = require("mongoose");
+const postsRoute_1 = require("../../src/routes/postsRoute");
+const dotenv_1 = require("dotenv");
+dotenv_1.default.config({ path: ".env.dev" });
+const app = (0, express_1.default)();
+app.use(express_1.default.json());
+// // API routes
+app.use("/post", postsRoute_1.default);
+// app.use("/comment", commentsRoute);
+// app.use("/auth", authRoute);
+const initApp = () => {
+    const pr = new Promise((resolve, reject) => {
+        const dbUrl = process.env.DATABASE_URL;
+        if (!dbUrl) {
+            reject("DATABASE_URL is undefined");
+            return;
+        }
+        mongoose_1.default.connect(dbUrl, {}).then(() => {
+            resolve(app);
+        });
+        const db = mongoose_1.default.connection;
+        db.on("error", (error) => console.error(error));
+        db.once("open", () => console.log("Connected to Database"));
+    });
+    return pr;
+};
+exports.default = initApp;
+//# sourceMappingURL=index.js.map
