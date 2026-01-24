@@ -1,5 +1,5 @@
 import request from "supertest";
-import initApp from "../../index";
+import initApp from "../index";
 import postsModel from "../models/postsModel";
 import { Express } from "express";
 import mongoose from "mongoose";
@@ -10,23 +10,19 @@ let authToken: string;
 const userId = new mongoose.Types.ObjectId().toString();
 let createdPostId: string;
 
-
 beforeAll(async () => {
-    jest.setTimeout(20000);
-    app = await initApp();
-    await postsModel.deleteMany({});
-    const secret = process.env.JWT_SECRET || "default_secret";
-    authToken = jwt.sign({ _id: userId }, secret, { expiresIn: "1h" });
+  jest.setTimeout(20000);
+  app = await initApp();
+  await postsModel.deleteMany({});
+  const secret = process.env.JWT_SECRET || "default_secret";
+  authToken = jwt.sign({ _id: userId }, secret, { expiresIn: "1h" });
 });
-
 
 afterAll((done) => {
   done();
 });
 
-
-describe("Posts CRUD API", () => { 
-
+describe("Posts CRUD API", () => {
   test("creates a post", async () => {
     const response = await request(app)
       .post("/post")
