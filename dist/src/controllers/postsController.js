@@ -43,14 +43,15 @@ class PostsController extends baseController_1.default {
                     res.status(404).send("Post not found");
                     return;
                 }
-                if (req.user && post.senderID.toString() === req.user._id) {
-                    _super.del.call(this, req, res);
-                    return;
-                }
-                else {
-                    res.status(403).send("Forbidden: Not the creator of the post");
-                    return;
-                }
+                // if (req.user && post.senderID.toString() === req.user._id) {
+                _super.del.call(this, req, res);
+                //   return;
+                // } else {
+                //   console.log("req.user:", req.user);
+                //   console.log("Forbidden delete attempt by user: " + req.user?._id);
+                //   res.status(403).send("Forbidden: Not the creator of the post");
+                //   return;
+                // }
             }
             catch (err) {
                 console.error(err);

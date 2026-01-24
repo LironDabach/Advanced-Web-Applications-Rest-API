@@ -35,6 +35,7 @@ class BaseController {
     getById(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             const id = req.params.id;
+            console.log("Get by ID: " + id);
             try {
                 const data = yield this.model.findById(id);
                 if (!data) {
