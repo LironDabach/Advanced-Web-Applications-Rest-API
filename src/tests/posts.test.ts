@@ -27,7 +27,6 @@ afterAll((done) => {
 
 describe("Posts CRUD API", () => { 
 
-
   test("creates a post", async () => {
     const response = await request(app)
       .post("/post")

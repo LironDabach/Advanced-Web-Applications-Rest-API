@@ -1,4 +1,3 @@
-import postModel from "../models/postsModel";
 import { Request, Response } from "express";
 import baseController from "../controllers/baseController";
 import postsModel from "../models/postsModel";
@@ -16,6 +15,7 @@ class PostsController extends baseController {
     }
     return super.create(req, res);
   }
+
   // Override delete method to allow only creator to delete the post
   async del(req: AuthRequest, res: Response) {
     const id = req.params.id;
@@ -25,7 +25,7 @@ class PostsController extends baseController {
         res.status(404).send("Post not found");
         return;
       }
-      if (req.user && post.creatredBy.toString() === req.user._id) {
+      if (req.user && post.senderID.toString() === req.user._id) {
         super.del(req, res);
         return;
       } else {
@@ -47,11 +47,12 @@ class PostsController extends baseController {
         res.status(404).send("Error: Post not found");
         return;
       }
-      if (
-        req.body.creatredBy &&
-        req.body.creatredBy !== post.creatredBy.toString()
-      ) {
+      if (req.body.senderID && req.body.senderID !== post.senderID.toString()) {
         res.status(400).send("Error: Cannot change creator of the post");
+        return;
+      }
+      if (req.user && post.senderID.toString() !== req.user._id) {
+        res.status(403).send("Forbidden: Not the creator of the post");
         return;
       }
       super.update(req, res);
