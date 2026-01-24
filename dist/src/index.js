@@ -6,13 +6,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const postsRoute_1 = __importDefault(require("./routes/postsRoute"));
+const commentsRoute_1 = __importDefault(require("./routes/commentsRoute"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config({ path: ".env.dev" });
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
-// // API routesç
+// // API routes
 app.use("/post", postsRoute_1.default);
-// app.use("/comment", commentsRoute);
+app.use("/comment", commentsRoute_1.default);
 // app.use("/auth", authRoute);
 const initApp = () => {
     const pr = new Promise((resolve, reject) => {
