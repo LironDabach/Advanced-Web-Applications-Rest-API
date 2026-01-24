@@ -16,13 +16,13 @@ Content-Type: application/json
 GET http://localhost:3000/post
 
 ### Get Post By ID
-GET http://localhost:3000/post/64bfa12c9e1a4a00123abcd1
+GET http://localhost:3000/post/6974bc1db5a9c8273fdb1001
 
 ### Get Posts By Sender
-GET http://localhost:3000/post?sender=user123
+GET http://localhost:3000/post?senderID=64bfa12c9e1a4a00123abcd1
 
 ### Update Post
-PUT http://localhost:3000/post/64bfa12c9e1a4a00123abcd1
+PUT http://localhost:3000/post/6974bc1db5a9c8273fdb1001
 Content-Type: application/json
 
 {
@@ -31,4 +31,4 @@ Content-Type: application/json
 }
 
 ### Delete Post
-DELETE http://localhost:3000/post/64bfa12c9e1a4a00123abcd1
+DELETE http://localhost:3000/post/6974bc1db5a9c8273fdb1001

@@ -26,6 +26,7 @@ class BaseController {
 
   async getById(req: Request, res: Response) {
     const id = req.params.id;
+    console.log("Get by ID: " + id);
     try {
       const data = await this.model.findById(id);
       if (!data) {
