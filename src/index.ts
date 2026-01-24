@@ -1,16 +1,18 @@
 import express, { Express } from "express";
 import mongoose from "mongoose";
 import postsRoute from "./routes/postsRoute";
+import commentsRoute from "./routes/commentsRoute";
 import dotenv from "dotenv";
+
 
 dotenv.config({ path: ".env.dev" });
 
 const app = express();
 app.use(express.json());
 
-// // API routesç
+// // API routes
 app.use("/post", postsRoute);
-// app.use("/comment", commentsRoute);
+app.use("/comment", commentsRoute);
 // app.use("/auth", authRoute);
 
 const initApp = () => {
