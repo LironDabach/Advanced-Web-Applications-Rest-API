@@ -43,7 +43,7 @@ class PostsController extends baseController_1.default {
                     res.status(404).send("Post not found");
                     return;
                 }
-                if (req.user && post.creatredBy.toString() === req.user._id) {
+                if (req.user && post.senderID.toString() === req.user._id) {
                     _super.del.call(this, req, res);
                     return;
                 }
@@ -71,9 +71,12 @@ class PostsController extends baseController_1.default {
                     res.status(404).send("Error: Post not found");
                     return;
                 }
-                if (req.body.creatredBy &&
-                    req.body.creatredBy !== post.creatredBy.toString()) {
+                if (req.body.senderID && req.body.senderID !== post.senderID.toString()) {
                     res.status(400).send("Error: Cannot change creator of the post");
+                    return;
+                }
+                if (req.user && post.senderID.toString() !== req.user._id) {
+                    res.status(403).send("Forbidden: Not the creator of the post");
                     return;
                 }
                 _super.update.call(this, req, res);
