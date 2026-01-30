@@ -2,6 +2,7 @@ import express, { Express } from "express";
 import mongoose from "mongoose";
 import postsRoute from "./routes/postsRoute";
 import commentsRoute from "./routes/commentsRoute";
+import authRoute from "./routes/authRoute";
 import dotenv from "dotenv";
 
 
@@ -13,7 +14,7 @@ app.use(express.json());
 // // API routes
 app.use("/post", postsRoute);
 app.use("/comment", commentsRoute);
-// app.use("/auth", authRoute);
+app.use("/auth", authRoute);
 
 const initApp = () => {
   const pr = new Promise<Express>((resolve, reject) => {
