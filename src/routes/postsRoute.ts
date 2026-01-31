@@ -6,12 +6,8 @@ const router = express.Router();
 
 router.get("/", postsController.getAll.bind(postsController));
 router.get("/:id", postsController.getById.bind(postsController));
-router.post("/", postsController.create.bind(postsController));
-router.put("/:id", postsController.update.bind(postsController));
-router.delete("/:id", postsController.del.bind(postsController));
-
-// router.post("/", authenticate, postsController.create.bind(postsController));
-// router.put("/:id", authenticate, postsController.update.bind(postsController));
-// router.delete("/:id", authenticate, postsController.del.bind(postsController));
+router.post("/", authenticate, postsController.create.bind(postsController));
+router.put("/:id", authenticate, postsController.update.bind(postsController));
+router.delete("/:id", authenticate, postsController.del.bind(postsController));
 
 export default router;

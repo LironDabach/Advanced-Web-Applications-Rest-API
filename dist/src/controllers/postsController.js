@@ -36,6 +36,7 @@ class PostsController extends baseController_1.default {
             del: { get: () => super.del }
         });
         return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             const id = req.params.id;
             try {
                 const post = yield this.model.findById(id);
@@ -43,15 +44,16 @@ class PostsController extends baseController_1.default {
                     res.status(404).send("Post not found");
                     return;
                 }
-                // if (req.user && post.senderID.toString() === req.user._id) {
-                _super.del.call(this, req, res);
-                //   return;
-                // } else {
-                //   console.log("req.user:", req.user);
-                //   console.log("Forbidden delete attempt by user: " + req.user?._id);
-                //   res.status(403).send("Forbidden: Not the creator of the post");
-                //   return;
-                // }
+                if (req.user && post.senderID.toString() === req.user._id) {
+                    _super.del.call(this, req, res);
+                    return;
+                }
+                else {
+                    console.log("req.user:", req.user);
+                    console.log("Forbidden delete attempt by user: " + ((_a = req.user) === null || _a === void 0 ? void 0 : _a._id));
+                    res.status(403).send("Forbidden: Not the creator of the post");
+                    return;
+                }
             }
             catch (err) {
                 console.error(err);
