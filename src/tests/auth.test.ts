@@ -3,6 +3,7 @@ import initApp from "../index";
 import usersModel from "../models/usersModel";
 import { Express } from "express";
 import jwt from "jsonwebtoken";
+import { authenticate } from "../middleware/authMiddleware";
 
 let app: Express;
 
@@ -57,6 +58,55 @@ describe("Auth API", () => {
     expect(user?.refreshTokens).toContain(registerRefreshToken);
   });
 
+  test("register fails when JWT_SECRET is missing and process.exit is called", async () => {
+    const originalSecret = process.env.JWT_SECRET;
+    const exitSpy = jest
+      .spyOn(process, "exit")
+      .mockImplementation((() => {
+        throw new Error("process.exit called");
+      }) as never);
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+    delete process.env.JWT_SECRET;
+
+    const response = await request(app).post("/auth/register").send({
+      username: `${username}_no_secret`,
+      email: `no_secret_${email}`,
+      password,
+    });
+
+    expect(response.status).toBe(500);
+    expect(errorSpy).toHaveBeenCalled();
+    expect(exitSpy).toHaveBeenCalled();
+
+    if (originalSecret !== undefined) {
+      process.env.JWT_SECRET = originalSecret;
+    }
+    exitSpy.mockRestore();
+    errorSpy.mockRestore();
+  });
+
+  test("login requires username, email and password", async () => {
+    const response = await request(app).post("/auth/login").send({
+      username,
+      email,
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("message");
+  });
+
+  test("login fails when user is not found", async () => {
+    const response = await request(app).post("/auth/login").send({
+      username: `${username}_missing`,
+      email: `missing_${email}`,
+      password,
+    });
+
+    expect(response.status).toBe(401);
+    expect(response.body).toHaveProperty("message");
+  });
+
   test("logs in a user and returns new tokens", async () => {
     const response = await request(app).post("/auth/login").send({
       username,
@@ -77,6 +127,34 @@ describe("Auth API", () => {
     expect(user?.refreshTokens).toContain(loginRefreshToken);
   });
 
+  test("login fails with invalid password", async () => {
+    const response = await request(app).post("/auth/login").send({
+      username,
+      email,
+      password: "WrongPass123!",
+    });
+
+    expect(response.status).toBe(401);
+    expect(response.body).toHaveProperty("message");
+  });
+
+  test("login returns 500 when model throws", async () => {
+    const findOneSpy = jest
+      .spyOn(usersModel, "findOne")
+      .mockRejectedValueOnce(new Error("db error"));
+
+    const response = await request(app).post("/auth/login").send({
+      username,
+      email,
+      password,
+    });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message");
+
+    findOneSpy.mockRestore();
+  });
+
   test("trying creating a post without token fails", async () => {
     const postData = {
       title: "Unauthorized Post",
@@ -89,6 +167,41 @@ describe("Auth API", () => {
       .send(postData);
 
     expect(response.status).toBe(401);
+  });
+
+  test("missing Authorization header returns 401", async () => {
+    const response = await request(app).post("/post").send({
+      title: "No auth header",
+      content: "Should fail",
+    });
+
+    expect(response.status).toBe(401);
+    expect(response.body).toHaveProperty("message");
+  });
+
+  test("missing bearer token returns 401", async () => {
+    const response = await request(app)
+      .post("/post")
+      .set("Authorization", "Bearer ")
+      .send({
+        title: "No token",
+        content: "Should fail",
+      });
+
+    expect(response.status).toBe(401);
+    expect(response.body).toHaveProperty("message");
+  });
+
+  test("authenticate returns 401 when Bearer token is empty", () => {
+    const req: any = { headers: { authorization: "Bearer " } };
+    const res: any = {
+      status: jest.fn().mockReturnValue({ json: jest.fn() }),
+    };
+    const next = jest.fn();
+
+    authenticate(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(401);
   });
 
   test("refreshes token and rotates refresh token", async () => {
@@ -124,6 +237,66 @@ describe("Auth API", () => {
       .post("/auth/refresh-token")
       .send({ refreshToken: refreshedRefreshToken });
     expect(refreshAttempt.status).toBe(401);
+  });
+
+  test("logout requires refresh token", async () => {
+    const response = await request(app).post("/auth/logout").send({});
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("message");
+  });
+
+  test("logout fails when token points to missing user", async () => {
+    const fakeToken = jwt.sign(
+      { _id: "000000000000000000000000" },
+      usedSecret,
+      { expiresIn: "1h" },
+    );
+    const response = await request(app).post("/auth/logout").send({
+      refreshToken: fakeToken,
+    });
+
+    expect(response.status).toBe(401);
+    expect(response.body).toHaveProperty("message");
+  });
+
+  test("logout returns 500 for malformed refresh token", async () => {
+    const response = await request(app).post("/auth/logout").send({
+      refreshToken: "not-a-jwt",
+    });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message");
+  });
+
+  test("refresh token requires refresh token", async () => {
+    const response = await request(app).post("/auth/refresh-token").send({});
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("message");
+  });
+
+  test("refresh token fails when token points to missing user", async () => {
+    const fakeToken = jwt.sign(
+      { _id: "000000000000000000000000" },
+      usedSecret,
+      { expiresIn: "1h" },
+    );
+    const response = await request(app).post("/auth/refresh-token").send({
+      refreshToken: fakeToken,
+    });
+
+    expect(response.status).toBe(401);
+    expect(response.body).toHaveProperty("message");
+  });
+
+  test("refresh token returns 401 for malformed token", async () => {
+    const response = await request(app).post("/auth/refresh-token").send({
+      refreshToken: "not-a-jwt",
+    });
+
+    expect(response.status).toBe(401);
+    expect(response.body).toHaveProperty("message");
   });
 
   test("tokens verify with .env.test JWT_SECRET and fail with a wrong secret", () => {

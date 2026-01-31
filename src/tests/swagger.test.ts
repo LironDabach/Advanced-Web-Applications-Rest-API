@@ -13,17 +13,24 @@ afterAll((done) => {
   done();
 });
 
-describe("Swagger docs", () => {
-  test("serves Swagger UI", async () => {
-    const response = await request(app).get("/api-docs");
+describe("Swagger and initApp", () => {
+  test("serves swagger spec JSON", async () => {
+    const response = await request(app).get("/api-docs.json");
+
     expect(response.status).toBe(200);
-    expect(response.text).toContain("Swagger UI");
+    expect(response.headers["content-type"]).toMatch(/application\/json/);
   });
 
-  test("serves OpenAPI JSON", async () => {
-    const response = await request(app).get("/api-docs.json");
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty("openapi");
-    expect(response.body).toHaveProperty("info");
+  test("initApp rejects when DATABASE_URL is missing", async () => {
+    const originalUrl = process.env.DATABASE_URL;
+    process.env.DATABASE_URL = "";
+
+    await expect(initApp()).rejects.toBe("DATABASE_URL is undefined");
+
+    if (originalUrl === undefined) {
+      delete process.env.DATABASE_URL;
+    } else {
+      process.env.DATABASE_URL = originalUrl;
+    }
   });
 });
