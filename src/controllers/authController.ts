@@ -57,14 +57,16 @@ const register = async (req: Request, res: Response) => {
     return sendError(500, "Internal server error", res);
   }
 };
+
 const login = async (req: Request, res: Response) => {
-  // Login logic here
   const username = req.body.username;
   const email = req.body.email;
   const password = req.body.password;
+
   if (!username || !email || !password) {
     return sendError(400, "Username, email and password are required", res);
   }
+
   try {
     const user = await User.findOne({ username: username, email: email });
     if (!user) {
@@ -86,9 +88,11 @@ const login = async (req: Request, res: Response) => {
 
 const logout = async (req: Request, res: Response) => {
   const refreshToken = req.body.refreshToken;
+
   if (!refreshToken) {
     return sendError(400, "Refresh token is required", res);
   }
+
   try {
     const decoded = jwt.decode(refreshToken) as { _id: string };
     const user = await User.findById(decoded._id);
@@ -107,10 +111,13 @@ const logout = async (req: Request, res: Response) => {
 
 const refreshToken = async (req: Request, res: Response) => {
   const refreshToken = req.body.refreshToken;
+
   if (!refreshToken) {
     return sendError(400, "Refresh token is required", res);
   }
+
   const secret = process.env.JWT_SECRET || "default_secret";
+
   try {
     const decoded = jwt.verify(refreshToken, secret) as { _id: string };
     const user = await User.findById(decoded._id);
@@ -125,7 +132,6 @@ const refreshToken = async (req: Request, res: Response) => {
     }
     const tokens = generateToken(decoded._id);
 
-    //remove old token from user refreshTokens and add the new one
     user.refreshTokens = user.refreshTokens.filter(
       (token) => token !== refreshToken,
     );
