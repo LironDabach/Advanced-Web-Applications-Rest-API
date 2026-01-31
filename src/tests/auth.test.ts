@@ -6,21 +6,18 @@ import jwt from "jsonwebtoken";
 
 let app: Express;
 
-beforeAll(async () => 
-  {
+beforeAll(async () => {
   jest.setTimeout(20000);
   app = await initApp();
   await usersModel.deleteMany({});
 });
 
-afterAll((done) => 
-  {
+afterAll((done) => {
   done();
 });
 
-describe("Auth API", () => 
-  {
-  const username = "test-user";
+describe("Auth API", () => {
+  const username = "shiran_levi";
   const email = "liron.dabach3@gmail.com";
   const password = "StrongPass123!";
   let registerRefreshToken: string;
@@ -29,16 +26,12 @@ describe("Auth API", () =>
   let refreshedRefreshToken: string;
   let usedSecret: string;
 
-  beforeAll(() => 
-    {
+  beforeAll(() => {
     usedSecret = process.env.JWT_SECRET || "";
   });
 
-  test("register requires username, email and password", async () => 
-    
-    {
-    const response = await request(app).post("/auth/register").send(
-      {
+  test("register requires username, email and password", async () => {
+    const response = await request(app).post("/auth/register").send({
       username,
       email,
     });
@@ -47,10 +40,8 @@ describe("Auth API", () =>
     expect(response.body).toHaveProperty("message");
   });
 
-  test("registers a user and returns tokens", async () => 
-    {
-    const response = await request(app).post("/auth/register").send(
-      {
+  test("registers a user and returns tokens", async () => {
+    const response = await request(app).post("/auth/register").send({
       username,
       email,
       password,
@@ -66,10 +57,8 @@ describe("Auth API", () =>
     expect(user?.refreshTokens).toContain(registerRefreshToken);
   });
 
-  test("logs in a user and returns new tokens", async () => 
-    {
-    const response = await request(app).post("/auth/login").send(
-      {
+  test("logs in a user and returns new tokens", async () => {
+    const response = await request(app).post("/auth/login").send({
       username,
       email,
       password,
@@ -88,10 +77,22 @@ describe("Auth API", () =>
     expect(user?.refreshTokens).toContain(loginRefreshToken);
   });
 
-  test("refreshes token and rotates refresh token", async () => 
-    {
-    const response = await request(app).post("/auth/refresh-token").send(
-      {
+  test("trying creating a post without token fails", async () => {
+    const postData = {
+      title: "Unauthorized Post",
+      content: "This should fail.",
+    };
+    const invakidToken = loginAccessToken + "invalid";
+    const response = await request(app)
+      .post("/post")
+      .set("Authorization", `Bearer ${invakidToken}`)
+      .send(postData);
+
+    expect(response.status).toBe(401);
+  });
+
+  test("refreshes token and rotates refresh token", async () => {
+    const response = await request(app).post("/auth/refresh-token").send({
       refreshToken: loginRefreshToken,
     });
 
@@ -107,10 +108,8 @@ describe("Auth API", () =>
     expect(user?.refreshTokens).not.toContain(loginRefreshToken);
   });
 
-  test("logout revokes refresh token", async () => 
-    {
-    const response = await request(app).post("/auth/logout").send(
-      {
+  test("logout revokes refresh token", async () => {
+    const response = await request(app).post("/auth/logout").send({
       refreshToken: refreshedRefreshToken,
     });
 
@@ -127,18 +126,15 @@ describe("Auth API", () =>
     expect(refreshAttempt.status).toBe(401);
   });
 
-  test("tokens verify with .env.test JWT_SECRET and fail with a wrong secret", () => 
-    {
+  test("tokens verify with .env.test JWT_SECRET and fail with a wrong secret", () => {
     expect(usedSecret).toBeTruthy();
 
-    const accessPayload = jwt.verify(
-      loginAccessToken,
-      usedSecret,
-    ) as { _id: string };
-    const refreshPayload = jwt.verify(
-      refreshedRefreshToken,
-      usedSecret,
-    ) as { _id: string };
+    const accessPayload = jwt.verify(loginAccessToken, usedSecret) as {
+      _id: string;
+    };
+    const refreshPayload = jwt.verify(refreshedRefreshToken, usedSecret) as {
+      _id: string;
+    };
 
     expect(accessPayload._id).toBeTruthy();
     expect(refreshPayload._id).toBeTruthy();

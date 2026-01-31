@@ -15,7 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const supertest_1 = __importDefault(require("supertest"));
 const index_1 = __importDefault(require("../index"));
 const usersModel_1 = __importDefault(require("../models/usersModel"));
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 let app;
 beforeAll(() => __awaiter(void 0, void 0, void 0, function* () {
     jest.setTimeout(20000);
@@ -26,7 +25,7 @@ afterAll((done) => {
     done();
 });
 describe("Auth API", () => {
-    const username = "test-user";
+    const username = "shiran_levi";
     const email = "liron.dabach3@gmail.com";
     const password = "StrongPass123!";
     let registerRefreshToken;
@@ -59,60 +58,76 @@ describe("Auth API", () => {
         expect(user).not.toBeNull();
         expect(user === null || user === void 0 ? void 0 : user.refreshTokens).toContain(registerRefreshToken);
     }));
-    test("logs in a user and returns new tokens", () => __awaiter(void 0, void 0, void 0, function* () {
-        const response = yield (0, supertest_1.default)(app).post("/auth/login").send({
-            username,
-            email,
-            password,
-        });
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty("token");
-        expect(response.body).toHaveProperty("refreshToken");
-        loginAccessToken = response.body.token;
-        loginRefreshToken = response.body.refreshToken;
-        expect(loginRefreshToken).not.toBe(registerRefreshToken);
-        const user = yield usersModel_1.default.findOne({ username, email });
-        expect(user).not.toBeNull();
-        expect(user === null || user === void 0 ? void 0 : user.refreshTokens).toContain(registerRefreshToken);
-        expect(user === null || user === void 0 ? void 0 : user.refreshTokens).toContain(loginRefreshToken);
-    }));
-    test("refreshes token and rotates refresh token", () => __awaiter(void 0, void 0, void 0, function* () {
-        const response = yield (0, supertest_1.default)(app).post("/auth/refresh-token").send({
-            refreshToken: loginRefreshToken,
-        });
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty("token");
-        expect(response.body).toHaveProperty("refreshToken");
-        refreshedRefreshToken = response.body.refreshToken;
-        expect(refreshedRefreshToken).not.toBe(loginRefreshToken);
-        const user = yield usersModel_1.default.findOne({ username, email });
-        expect(user).not.toBeNull();
-        expect(user === null || user === void 0 ? void 0 : user.refreshTokens).toContain(refreshedRefreshToken);
-        expect(user === null || user === void 0 ? void 0 : user.refreshTokens).not.toContain(loginRefreshToken);
-    }));
-    test("logout revokes refresh token", () => __awaiter(void 0, void 0, void 0, function* () {
-        const response = yield (0, supertest_1.default)(app).post("/auth/logout").send({
-            refreshToken: refreshedRefreshToken,
-        });
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty("message");
-        const user = yield usersModel_1.default.findOne({ username, email });
-        expect(user).not.toBeNull();
-        expect(user === null || user === void 0 ? void 0 : user.refreshTokens).not.toContain(refreshedRefreshToken);
-        const refreshAttempt = yield (0, supertest_1.default)(app)
-            .post("/auth/refresh-token")
-            .send({ refreshToken: refreshedRefreshToken });
-        expect(refreshAttempt.status).toBe(401);
-    }));
-    test("tokens verify with .env.test JWT_SECRET and fail with a wrong secret", () => {
-        expect(usedSecret).toBeTruthy();
-        const accessPayload = jsonwebtoken_1.default.verify(loginAccessToken, usedSecret);
-        const refreshPayload = jsonwebtoken_1.default.verify(refreshedRefreshToken, usedSecret);
-        expect(accessPayload._id).toBeTruthy();
-        expect(refreshPayload._id).toBeTruthy();
-        const wrongSecret = `${usedSecret}_wrong`;
-        expect(() => jsonwebtoken_1.default.verify(loginAccessToken, wrongSecret)).toThrow();
-        expect(() => jsonwebtoken_1.default.verify(refreshedRefreshToken, wrongSecret)).toThrow();
-    });
+    // test("logs in a user and returns new tokens", async () => {
+    //   const response = await request(app).post("/auth/login").send({
+    //     username,
+    //     email,
+    //     password,
+    //   });
+    //   expect(response.status).toBe(200);
+    //   expect(response.body).toHaveProperty("token");
+    //   expect(response.body).toHaveProperty("refreshToken");
+    //   loginAccessToken = response.body.token;
+    //   loginRefreshToken = response.body.refreshToken;
+    //   expect(loginRefreshToken).not.toBe(registerRefreshToken);
+    //   const user = await usersModel.findOne({ username, email });
+    //   expect(user).not.toBeNull();
+    //   expect(user?.refreshTokens).toContain(registerRefreshToken);
+    //   expect(user?.refreshTokens).toContain(loginRefreshToken);
+    // });
+    // test("trying creating a post without token fails", async () => {
+    //   const postData = {
+    //     title: "Unauthorized Post",
+    //     content: "This should fail.",
+    //   };
+    //   const invakidToken = loginAccessToken + "invalid";
+    //   const response = await request(app)
+    //     .post("/post")
+    //     .set("Authorization", `Bearer ${invakidToken}`)
+    //     .send(postData);
+    //   expect(response.status).toBe(401);
+    // });
+    // test("refreshes token and rotates refresh token", async () => {
+    //   const response = await request(app).post("/auth/refresh-token").send({
+    //     refreshToken: loginRefreshToken,
+    //   });
+    //   expect(response.status).toBe(200);
+    //   expect(response.body).toHaveProperty("token");
+    //   expect(response.body).toHaveProperty("refreshToken");
+    //   refreshedRefreshToken = response.body.refreshToken;
+    //   expect(refreshedRefreshToken).not.toBe(loginRefreshToken);
+    //   const user = await usersModel.findOne({ username, email });
+    //   expect(user).not.toBeNull();
+    //   expect(user?.refreshTokens).toContain(refreshedRefreshToken);
+    //   expect(user?.refreshTokens).not.toContain(loginRefreshToken);
+    // });
+    // test("logout revokes refresh token", async () => {
+    //   const response = await request(app).post("/auth/logout").send({
+    //     refreshToken: refreshedRefreshToken,
+    //   });
+    //   expect(response.status).toBe(200);
+    //   expect(response.body).toHaveProperty("message");
+    //   const user = await usersModel.findOne({ username, email });
+    //   expect(user).not.toBeNull();
+    //   expect(user?.refreshTokens).not.toContain(refreshedRefreshToken);
+    //   const refreshAttempt = await request(app)
+    //     .post("/auth/refresh-token")
+    //     .send({ refreshToken: refreshedRefreshToken });
+    //   expect(refreshAttempt.status).toBe(401);
+    // });
+    // test("tokens verify with .env.test JWT_SECRET and fail with a wrong secret", () => {
+    //   expect(usedSecret).toBeTruthy();
+    //   const accessPayload = jwt.verify(loginAccessToken, usedSecret) as {
+    //     _id: string;
+    //   };
+    //   const refreshPayload = jwt.verify(refreshedRefreshToken, usedSecret) as {
+    //     _id: string;
+    //   };
+    //   expect(accessPayload._id).toBeTruthy();
+    //   expect(refreshPayload._id).toBeTruthy();
+    //   const wrongSecret = `${usedSecret}_wrong`;
+    //   expect(() => jwt.verify(loginAccessToken, wrongSecret)).toThrow();
+    //   expect(() => jwt.verify(refreshedRefreshToken, wrongSecret)).toThrow();
+    // });
 });
 //# sourceMappingURL=auth.test.js.map
