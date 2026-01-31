@@ -38,6 +38,24 @@
 
 ---
 
+## 📚 Swagger (API Docs)
+
+After the server is running, open the Swagger UI at:
+
+```
+http://localhost:3000/api-docs
+```
+
+You can also fetch the raw OpenAPI JSON at:
+
+```
+http://localhost:3000/api-docs.json
+```
+
+Optional: set `SWAGGER_SERVER_URL` in `.env.dev` to override the server URL shown inside the docs.
+
+---
+
 ## 🗂️ מבנה הפרויקט
 
 ```

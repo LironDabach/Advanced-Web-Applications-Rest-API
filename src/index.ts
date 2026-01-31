@@ -4,12 +4,14 @@ import postsRoute from "./routes/postsRoute";
 import commentsRoute from "./routes/commentsRoute";
 import authRoute from "./routes/authRoute";
 import dotenv from "dotenv";
+import { setupSwagger } from "./swagger";
 
 
 dotenv.config({ path: ".env.dev" });
 
 const app = express();
 app.use(express.json());
+setupSwagger(app);
 
 // // API routes
 app.use("/post", postsRoute);
