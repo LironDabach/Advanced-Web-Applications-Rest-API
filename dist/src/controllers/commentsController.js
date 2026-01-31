@@ -44,13 +44,16 @@ class CommentsController extends baseController_1.default {
                     return;
                 }
                 // // Check if the authenticated user is the creator of the comment
-                // if (req.user && comment.userID.toString() === req.user._id) {
-                _super.del.call(this, req, res);
-                // return;
-                // } else {
-                //     res.status(403).send("Forbidden: You are not the creator of this comment");
-                //     return;
-                // }
+                if (req.user && comment.userID.toString() === req.user._id) {
+                    _super.del.call(this, req, res);
+                    return;
+                }
+                else {
+                    res
+                        .status(403)
+                        .send("Forbidden: You are not the creator of this comment");
+                    return;
+                }
             }
             catch (err) {
                 console.error(err);
@@ -72,15 +75,17 @@ class CommentsController extends baseController_1.default {
                     return;
                 }
                 // Check if the authenticated user is the creator of the comment
-                // if (!req.user || comment.userID.toString() !== req.user._id) {
-                //     res.status(403).send("Forbidden: You are not the creator of this comment");
-                //     return;
-                // }
-                // // Prevent changing userId field
-                // if (req.body.userID && req.body.userID !== comment.userID.toString()) {
-                //     res.status(400).send("Cannot change creator of the comment");
-                //     return;
-                // }
+                if (!req.user || comment.userID.toString() !== req.user._id) {
+                    res
+                        .status(403)
+                        .send("Forbidden: You are not the creator of this comment");
+                    return;
+                }
+                // Prevent changing userId field
+                if (req.body.userID && req.body.userID !== comment.userID.toString()) {
+                    res.status(400).send("Cannot change creator of the comment");
+                    return;
+                }
                 _super.update.call(this, req, res);
                 return;
             }
