@@ -2,6 +2,7 @@ import request from "supertest";
 import initApp from "../index";
 import usersModel from "../models/usersModel";
 import { Express } from "express";
+import jwt from "jsonwebtoken";
 
 let app: Express;
 
@@ -24,7 +25,14 @@ describe("Auth API", () =>
   const password = "StrongPass123!";
   let registerRefreshToken: string;
   let loginRefreshToken: string;
+  let loginAccessToken: string;
   let refreshedRefreshToken: string;
+  let usedSecret: string;
+
+  beforeAll(() => 
+    {
+    usedSecret = process.env.JWT_SECRET || "";
+  });
 
   test("register requires username, email and password", async () => 
     
@@ -70,6 +78,7 @@ describe("Auth API", () =>
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty("token");
     expect(response.body).toHaveProperty("refreshToken");
+    loginAccessToken = response.body.token;
     loginRefreshToken = response.body.refreshToken;
     expect(loginRefreshToken).not.toBe(registerRefreshToken);
 
@@ -116,5 +125,26 @@ describe("Auth API", () =>
       .post("/auth/refresh-token")
       .send({ refreshToken: refreshedRefreshToken });
     expect(refreshAttempt.status).toBe(401);
+  });
+
+  test("tokens verify with .env.test JWT_SECRET and fail with a wrong secret", () => 
+    {
+    expect(usedSecret).toBeTruthy();
+
+    const accessPayload = jwt.verify(
+      loginAccessToken,
+      usedSecret,
+    ) as { _id: string };
+    const refreshPayload = jwt.verify(
+      refreshedRefreshToken,
+      usedSecret,
+    ) as { _id: string };
+
+    expect(accessPayload._id).toBeTruthy();
+    expect(refreshPayload._id).toBeTruthy();
+
+    const wrongSecret = `${usedSecret}_wrong`;
+    expect(() => jwt.verify(loginAccessToken, wrongSecret)).toThrow();
+    expect(() => jwt.verify(refreshedRefreshToken, wrongSecret)).toThrow();
   });
 });

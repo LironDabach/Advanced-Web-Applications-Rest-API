@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const supertest_1 = __importDefault(require("supertest"));
 const index_1 = __importDefault(require("../index"));
 const usersModel_1 = __importDefault(require("../models/usersModel"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 let app;
 beforeAll(() => __awaiter(void 0, void 0, void 0, function* () {
     jest.setTimeout(20000);
@@ -30,7 +31,12 @@ describe("Auth API", () => {
     const password = "StrongPass123!";
     let registerRefreshToken;
     let loginRefreshToken;
+    let loginAccessToken;
     let refreshedRefreshToken;
+    let usedSecret;
+    beforeAll(() => {
+        usedSecret = process.env.JWT_SECRET || "";
+    });
     test("register requires username, email and password", () => __awaiter(void 0, void 0, void 0, function* () {
         const response = yield (0, supertest_1.default)(app).post("/auth/register").send({
             username,
@@ -62,6 +68,7 @@ describe("Auth API", () => {
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty("token");
         expect(response.body).toHaveProperty("refreshToken");
+        loginAccessToken = response.body.token;
         loginRefreshToken = response.body.refreshToken;
         expect(loginRefreshToken).not.toBe(registerRefreshToken);
         const user = yield usersModel_1.default.findOne({ username, email });
@@ -97,5 +104,15 @@ describe("Auth API", () => {
             .send({ refreshToken: refreshedRefreshToken });
         expect(refreshAttempt.status).toBe(401);
     }));
+    test("tokens verify with .env.test JWT_SECRET and fail with a wrong secret", () => {
+        expect(usedSecret).toBeTruthy();
+        const accessPayload = jsonwebtoken_1.default.verify(loginAccessToken, usedSecret);
+        const refreshPayload = jsonwebtoken_1.default.verify(refreshedRefreshToken, usedSecret);
+        expect(accessPayload._id).toBeTruthy();
+        expect(refreshPayload._id).toBeTruthy();
+        const wrongSecret = `${usedSecret}_wrong`;
+        expect(() => jsonwebtoken_1.default.verify(loginAccessToken, wrongSecret)).toThrow();
+        expect(() => jsonwebtoken_1.default.verify(refreshedRefreshToken, wrongSecret)).toThrow();
+    });
 });
 //# sourceMappingURL=auth.test.js.map
